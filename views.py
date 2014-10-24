@@ -13,13 +13,34 @@ class AddFriendView(LoginRequiredMixin, FormView):
 	template_name = "add_friend.html"
 	user = self.request.user
 
-	def get_relation_status(self):
-		status = Friend.objects.value_select('status', flat=True).filter(user=friend, friend=user)
+	def check_relationship(self):
+		existing = Friend.objects.filter(user=friend, friend=user)
+		if existing:
+			status = 1
+		else:
+			status = 0
+		return status
 
 	def get_form_kwargs(self):
 		kwargs = super(AddFriendView, self).get_form_kwargs(**kwargs)
 		kwargs['user'] = user
-		kwargs['status'] = 0
+		kwargs['status'] = self.check_relationship()
+		return kwargs
+
+	def get_success_url(self):
+		return reverse('detail-profile', kwargs={'pk': user})
+
+class ConfirmFriendView(LoginRequiredMixin, FormView):
+	"""
+	Confirms a friend request sent by user
+	"""
+	template_name = "confirm_friend.html"
+	user = self.request.user
+
+	def get_form_kwargs(self):
+		kwargs = super(ConfirmFriendView, self).get_form_kwargs(**kwargs)
+		kwargs['user'] = user
+		kwargs['status'] = 1
 		return kwargs
 
 	def get_success_url(self):

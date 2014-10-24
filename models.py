@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 
 # Create your models here.
-class Friend(models.Model):
+class Relationship(models.Model):
 	PENDING = 0
 	FRIENDS = 1
 	BLOCKED = 2
