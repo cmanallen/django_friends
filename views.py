@@ -30,7 +30,8 @@ class AddFriendView(LoginRequiredMixin, FormView):
 	def get_success_url(self):
 		return reverse('detail-profile', kwargs={'pk': user})
 
-class ConfirmFriendView(LoginRequiredMixin, FormView):
+
+class BlockUserView(LoginRequiredMixin, FormView):
 	"""
 	Confirms a friend request sent by user
 	"""
@@ -38,13 +39,14 @@ class ConfirmFriendView(LoginRequiredMixin, FormView):
 	user = self.request.user
 
 	def get_form_kwargs(self):
-		kwargs = super(ConfirmFriendView, self).get_form_kwargs(**kwargs)
+		kwargs = super(BlockUserView, self).get_form_kwargs(**kwargs)
 		kwargs['user'] = user
-		kwargs['status'] = 1
+		kwargs['status'] = 2
 		return kwargs
 
 	def get_success_url(self):
 		return reverse('detail-profile', kwargs={'pk': user})
+
 
 class BlockFriendView(LoginRequiredMixin, FormView):
 	"""
