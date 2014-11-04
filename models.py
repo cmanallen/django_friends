@@ -5,44 +5,44 @@ from django.db import models
 
 class RelationshipManager(models.Manager):
 	def get_list_of_friends(self, user):
-		"""
-		Get a list of the users friends.
-		"""
+		""" Get a list of the users friends """
 		return self.filter(user=user,status=FRIENDS)
 
 	def get_relationship(self, active, passive):
-		"""
-		Get the relationship of two given users.
-		"""
+		""" Get the relationship of two given users. """
 		return self.filter(
 			Q(user=passive,target=active) |
 			Q(user=active,target=passive)
 		).values('status').order_by("-status")[0]
 
-	def accept(self, user, friend):
+	def request(self, user, target):
+		""" Request friendship with another user """
+		relation, created = self.get_or_create(
+			user=user, 
+			target=target, 
+			defaults={'status': PENDING}
+		)
+		return created
+
+	def accept(self, user, target):
 		"""
 		Create appropriate model relations for friends.  Returns 'True' if
 		successful.
 		"""
-		relation, created = self.get_or_create(user=user, target=target)
 		try:
-			if created:
+			relation, created = self.get_or_create(user=user, target=target)
+			if not created:
 				relation.update(status=FRIENDS)
-			else:
-				new = Relationship(user=user, target=friend, status=FRIENDS)
-				new.save()
-			self.filter(user=friend, target=user).update(status=FRIENDS)
+			self.filter(user=target, target=user).update(status=FRIENDS)
 		except:
 			status = False
 		else:
 			status = True
-
 		return status
 
+
 	def deny(self, user, target):
-		"""
-		Deny the request by deleting the entry
-		"""
+		""" Deny the request by deleting the entry """
 		try:
 			self.filter(user=target,target=user,status=PENDING).delete()
 		except:
@@ -53,9 +53,7 @@ class RelationshipManager(models.Manager):
 		return status
 
 	def block(self, user, target):
-		"""
-		Create a new entry in the Relationship model with status of '2'
-		"""
+		""" Create a new entry in the Relationship model with status of '2' """
 		relation, created = self.get_or_create(user=user, target=target)
 		try:
 			if created:
@@ -63,6 +61,19 @@ class RelationshipManager(models.Manager):
 			else:
 				new = Relationship(user=user, target=target, status=BLOCKED)
 				new.save()
+		except:
+			status = False
+		else:
+			status = True
+
+		return status
+
+	def unblock(self, user, target):
+		"""
+		Remove a block entry from the Relationship model
+		"""
+		try:
+			self.filter(user=user, target=target, status=BLOCKED).delete()
 		except:
 			status = False
 		else:
@@ -85,7 +96,7 @@ class Relationship(models.Model):
 	target = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='target')
 	
 	# Fields
-	status = models.IntegerField(choices=STATUS_CHOICES)
+	status = models.IntegerField(choices=STATUS_CHOICES, default=0)
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
 

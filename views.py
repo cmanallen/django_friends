@@ -1,11 +1,19 @@
 from django.core.urlresolvers import reverse
-from django.views.generic import FormView
+from django.views.generic import FormView, RedirectView
 
 from .models import Friend
 from .mixins import LoginRequiredMixin
 
 
 # Create your views here.
+class AddFriend(LoginRequiredMixin, RedirectView):
+	url = reverse('home')
+
+	def get(self, request, *args, **kwargs):
+		Friend.objects.
+
+
+
 class AddFriendView(LoginRequiredMixin, FormView):
 	"""
 	Sends a friend request from one user to another user
